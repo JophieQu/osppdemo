@@ -1,6 +1,4 @@
-# 性能分析演示项目
-
-这个项目演示了使用Go语言，生成性能分析数据，并用Java程序解析和可视化这些数据的整体流程。
+# ospp预选任务
 
 ## 项目结构
 
@@ -35,17 +33,14 @@ demo-root/
 
 ### 生成性能分析数据
 
-1. 切换到Go服务目录
+1. 切换到Go目录
    ```
    cd go-service
    ```
 
-2. 启动Go服务并挂载skywalking
+2. 启动Go程序，并挂载skywalking-go
    ```
    > go build -toolexec="/Users/jingyiqu/ospp/demo/apache-skywalking-go-0.6.0-bin/bin/skywalking-go-agent-0.6.0-darwin-amd64" -a -o test .
-
-   > export SW_AGENT_NAME=demo
-
    > ./test
 
    ```
@@ -57,6 +52,7 @@ demo-root/
 1. 切换到Java分析器目录
    ```
    cd java-analyzer
+
    ```
 
 2. 使用Maven编译和运行分析器
