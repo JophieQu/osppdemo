@@ -65,11 +65,6 @@ func main() {
 
 	// 启动HTTP服务器
 	go func() {
-		// 添加停止程序的端点
-		http.HandleFunc("/stop", func(writer http.ResponseWriter, request *http.Request) {
-			writer.Write([]byte("Stopping the program..."))
-			close(stopChan)
-		})
 
 		http.HandleFunc("/hello", func(writer http.ResponseWriter, request *http.Request) {
 			writer.Write([]byte("Hello World"))

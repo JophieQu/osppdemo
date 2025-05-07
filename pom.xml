@@ -19,12 +19,12 @@
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
-            <version>4.29.3</version>
+            <version>3.19.6</version>
         </dependency>
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java-util</artifactId>
-            <version>4.29.3</version>
+            <version>3.19.6</version>
         </dependency>
     </dependencies>
 
@@ -45,7 +45,7 @@
                 <artifactId>protobuf-maven-plugin</artifactId>
                 <version>0.5.1</version>
                 <configuration>
-                    <protocArtifact>com.google.protobuf:protoc:4.29.3:exe:${os.detected.classifier}</protocArtifact>
+                    <protocArtifact>com.google.protobuf:protoc:3.19.6:exe:${os.detected.classifier}</protocArtifact>
                     <protoSourceRoot>${project.basedir}/src/main/proto</protoSourceRoot>
                     <outputDirectory>${project.build.directory}/generated-sources/protobuf/java</outputDirectory>
                     <clearOutputDirectory>false</clearOutputDirectory>
@@ -86,7 +86,7 @@
                     <cleanupDaemonThreads>false</cleanupDaemonThreads>
                     <includeProjectDependencies>true</includeProjectDependencies>
                     <includePluginDependencies>true</includePluginDependencies>
-                    <mainClass>src.main.java.PprofAnalyzer</mainClass>
+                    <mainClass>com.example.PprofAnalyzer</mainClass>
                     <classpathScope>compile</classpathScope>
                 </configuration>
             </plugin>

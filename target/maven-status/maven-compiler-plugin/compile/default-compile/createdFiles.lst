@@ -1,7 +1,8 @@
+com/example/FlameGraphGenerator.class
 com/google/perftools/profiles/ProfileProto$LineOrBuilder.class
 com/google/perftools/profiles/ProfileProto$Mapping$1.class
 com/google/perftools/profiles/ProfileProto$Function$1.class
-src/main/java/PprofAnalyzer.class
+com/example/CallGraphGenerator.class
 com/google/perftools/profiles/ProfileProto$Mapping.class
 com/google/perftools/profiles/ProfileProto$Label$1.class
 com/google/perftools/profiles/ProfileProto$Mapping$Builder.class
@@ -14,10 +15,12 @@ com/google/perftools/profiles/ProfileProto.class
 com/google/perftools/profiles/ProfileProto$LabelOrBuilder.class
 com/google/perftools/profiles/ProfileProto$Function.class
 com/google/perftools/profiles/ProfileProto$Profile$1.class
+com/example/PprofAnalyzer.class
 com/google/perftools/profiles/ProfileProto$LocationOrBuilder.class
 com/google/perftools/profiles/ProfileProto$Location.class
 com/google/perftools/profiles/ProfileProto$ValueType$1.class
 com/google/perftools/profiles/ProfileProto$SampleOrBuilder.class
+com/example/FlameGraphGenerator$StackInfo.class
 com/google/perftools/profiles/ProfileProto$Line$Builder.class
 com/google/perftools/profiles/ProfileProto$Sample.class
 com/google/perftools/profiles/ProfileProto$Function$Builder.class
