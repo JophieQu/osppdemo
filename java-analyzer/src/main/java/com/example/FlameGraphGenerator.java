@@ -80,35 +80,37 @@ public class FlameGraphGenerator {
 
         // 生成SVG
         try (FileWriter writer = new FileWriter(outputPath)) {
-            int width = 1200;
-            int frameHeight = 24;
+            // 增加图表尺寸，改善可读性
+            int width = 1800;
+            int frameHeight = 28; // 增加每帧高度
             int height = (maxDepth + 1) * frameHeight;
-            int xpad = 10;
-            int titleHeight = 80;
+            int xpad = 20; // 增加左右边距
+            int titleHeight = 120; // 增加标题区域高度
 
             writer.write(String.format("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"));
             writer.write(String.format("<svg width=\"%d\" height=\"%d\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">\n",
                 width + 2 * xpad, height + titleHeight));
 
             // 添加标题
-            writer.write(String.format("<text x=\"%d\" y=\"20\" font-size=\"14\" font-family=\"Verdana\">%s</text>\n",
-                xpad, "CPU Flame Graph"));
+            // writer.write(String.format("<text x=\"%d\" y=\"20\" font-size=\"16\" font-family=\"Arial\">%s</text>\n",
+            //     xpad, "CPU Profile Flame Graph"));
 
+            // 定义更鲜明的渐变色
             writer.write(String.format("<defs>\n"));
             writer.write(String.format("  <linearGradient id=\"grad\" x1=\"0%%\" y1=\"0%%\" x2=\"100%%\" y2=\"0%%\">\n"));
-            writer.write(String.format("    <stop offset=\"0%%\" style=\"stop-color:#FF6B6B;stop-opacity:1\" />\n"));
-            writer.write(String.format("    <stop offset=\"50%%\" style=\"stop-color:#4ECDC4;stop-opacity:1\" />\n"));
-            writer.write(String.format("    <stop offset=\"100%%\" style=\"stop-color:#45B7D1;stop-opacity:1\" />\n"));
+            writer.write(String.format("    <stop offset=\"0%%\" style=\"stop-color:#FF6347;stop-opacity:1\" />\n"));
+            writer.write(String.format("    <stop offset=\"50%%\" style=\"stop-color:#3CB371;stop-opacity:1\" />\n"));
+            writer.write(String.format("    <stop offset=\"100%%\" style=\"stop-color:#4169E1;stop-opacity:1\" />\n"));
             writer.write(String.format("  </linearGradient>\n"));
             writer.write(String.format("</defs>\n"));
 
-            // 添加标题和说明
+            // 优化CSS样式
             writer.write(String.format("<style>\n"));
-            writer.write(String.format(".title { font-size: 20px; font-weight: bold; font-family: Arial; }\n"));
-            writer.write(String.format(".subtitle { font-size: 14px; font-family: Arial; fill: #666; }\n"));
+            writer.write(String.format(".title { font-size: 28px; font-weight: bold; font-family: 'Arial', sans-serif; }\n"));
+            writer.write(String.format(".subtitle { font-size: 18px; font-family: 'Arial', sans-serif; fill: #333; }\n"));
             writer.write(String.format(".frame { transition: opacity 0.3s; cursor: pointer; }\n"));
-            writer.write(String.format(".frame:hover { opacity: 0.8; }\n"));
-            writer.write(String.format(".frame-text { font-size: 14px; font-family: Arial; pointer-events: none; font-weight: 500; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }\n"));
+            writer.write(String.format(".frame:hover { opacity: 0.9; stroke-width: 1.5; }\n"));
+            writer.write(String.format(".frame-text { font-size: 16px; font-family: 'Arial', sans-serif; pointer-events: none; font-weight: bold; text-shadow: 1px 1px 3px rgba(0,0,0,0.7); }\n"));
             writer.write(String.format("</style>\n"));
 
             // 计算CPU性能统计信息
@@ -119,12 +121,12 @@ public class FlameGraphGenerator {
             double totalTimeMs = totalTimeNanos / 1_000_000.0;
             double samplingRate = totalSamples / (totalTimeMs / 1000.0);
             
-            // 添加标题和性能统计信息
-            writer.write(String.format("<text x=\"%d\" y=\"24\" class=\"title\">CPU Profile Flame Graph</text>\n", xpad));
-            writer.write(String.format("<text x=\"%d\" y=\"45\" class=\"subtitle\">总采样数: %d | 函数数: %d | 总CPU时间: %.2f ms | 采样率: %.1f Hz</text>\n",
-                xpad, totalSamples, stackCounts.size(), totalTimeMs, samplingRate));
+            // 添加标题和性能统计信息，使用更大更清晰的字体
+            writer.write(String.format("<text x=\"%d\" y=\"40\" class=\"title\">CPU Profile Flame Graph</text>\n", xpad));
+            writer.write(String.format("<text x=\"%d\" y=\"70\" class=\"subtitle\">总采样数: %d | 函数数: %d | 总CPU时间: %.2f ms | 采样率: %.1f Hz</text>\n",
+                xpad, totalSamples, profile.getFunctionCount(), totalTimeMs, samplingRate));
             
-            // 添加热点函数统计
+            // 添加热点函数统计，使用更友好的布局
             Map<String, Long> hotFunctions = new HashMap<>();
             for (Map.Entry<String, Long> entry : stackCounts.entrySet()) {
                 String[] frames = entry.getKey().split(";");
@@ -140,12 +142,12 @@ public class FlameGraphGenerator {
             for (int i = 0; i < Math.min(5, hotList.size()); i++) {
                 Map.Entry<String, Long> hot = hotList.get(i);
                 if (i > 0) hotSpots.append(" | ");
+                double percentage = 100.0 * hot.getValue() / totalSamples;
                 hotSpots.append(String.format("%s (%.1f%%)", 
-                    truncateText(hot.getKey(), 30),
-                    100.0 * hot.getValue() / totalSamples));
+                    truncateText(hot.getKey(), 20), percentage));
             }
             
-            writer.write(String.format("<text x=\"%d\" y=\"65\" class=\"subtitle\">%s</text>\n",
+            writer.write(String.format("<text x=\"%d\" y=\"100\" class=\"subtitle\">%s</text>\n",
                 xpad, hotSpots.toString()));
 
             // 绘制火焰图框架
@@ -162,21 +164,31 @@ public class FlameGraphGenerator {
                         .sum() * xscale;
                     double y = height + titleHeight - (i + 1) * frameHeight;
 
-                    // 使用渐变色填充
+                    // 使用渐变色填充，增加对比度
                     writer.write(String.format("<g class=\"frame\" data-samples=\"%d\">\n", samples));
+                    
+                    // 根据堆栈深度调整颜色，使更深层次的帧颜色更深
+                    double opacity = Math.min(0.85 + (0.15 * i / Math.max(1, frames.length)), 1.0);
+                    
                     writer.write(String.format("<rect x=\"%.1f\" y=\"%.1f\" width=\"%.1f\" height=\"%d\" "
-                        + "fill=\"url(#grad)\" opacity=\"%.2f\" rx=\"2\" ry=\"2\" stroke=\"#FFF\" stroke-width=\"0.5\">\n",
-                        x, y, frameWidth, frameHeight - 1, 0.8 + (0.2 * i / frames.length)));
+                        + "fill=\"url(#grad)\" opacity=\"%.2f\" rx=\"3\" ry=\"3\" stroke=\"#FFF\" stroke-width=\"0.8\">\n",
+                        x, y, Math.max(frameWidth, 1.0), frameHeight - 2, opacity));
+                        
                     double frameDurationMs = (samples * totalTimeMs) / totalSamples;
                     writer.write(String.format("<title>%s\n采样数: %d (%.2f%%)\n耗时: %.2f ms</title>\n</rect>\n",
                         frames[i], samples, 100.0 * samples / totalSamples, frameDurationMs));
 
-                    // 添加文本标签
-                    if (frameWidth > 50) {
+                    // 添加文本标签，调整显示阈值并改进文本长度计算
+                    if (frameWidth > 30) {
+                        int maxTextLength = Math.max(3, (int)(frameWidth / 9));
                         String displayText = String.format("%s (%.1f ms)", 
-                            truncateText(frames[i], frameWidth - 50), frameDurationMs);
-                        writer.write(String.format("<text x=\"%.1f\" y=\"%.1f\" class=\"frame-text\" fill=\"#FFF\">%s</text>\n",
-                            x + 3, y + frameHeight - 8, displayText));
+                            truncateText(frames[i], maxTextLength), frameDurationMs);
+                        
+                        // 为文本添加白色背景盒子，提高可读性
+                        if (frameWidth > 80) {
+                            writer.write(String.format("<text x=\"%.1f\" y=\"%.1f\" class=\"frame-text\" fill=\"#FFF\">%s</text>\n",
+                                x + 5, y + frameHeight - 9, displayText));
+                        }
                     }
                     writer.write("</g>\n");
                 }
@@ -186,10 +198,9 @@ public class FlameGraphGenerator {
         }
     }
 
-    private String truncateText(String text, double width) {
-        int maxChars = (int)(width / 6); // 假设每个字符平均宽度为6像素
+    private String truncateText(String text, double maxChars) {
         if (text.length() > maxChars) {
-            return text.substring(0, maxChars - 3) + "...";
+            return text.substring(0, (int)maxChars - 3) + "...";
         }
         return text;
     }
