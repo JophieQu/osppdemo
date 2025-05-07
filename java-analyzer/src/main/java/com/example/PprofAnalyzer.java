@@ -129,13 +129,13 @@ public class PprofAnalyzer {
                     0.0, 0.0, sumPercent, cumTime / 1e9, cumPercent, functionName));
             }
             // 生成火焰图
-            String flameGraphPath = "../flamegraph.svg";
+            String flameGraphPath = "../profiling-data/flamegraph.svg";
             FlameGraphGenerator flameGraphGenerator = new FlameGraphGenerator(profile, flameGraphPath);
             flameGraphGenerator.generateFlameGraph();
             System.out.println("\n火焰图已生成到: " + flameGraphPath);
 
             // 生成调用图
-            String callGraphPath = "../callgraph.svg";
+            String callGraphPath = "../profiling-data/callgraph.svg";
             CallGraphGenerator callGraphGenerator = new CallGraphGenerator(profile, callGraphPath);
             callGraphGenerator.generateCallGraph();
             System.out.println("调用图已生成到: " + callGraphPath);
