@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"math"
 	"net/http"
@@ -40,15 +41,23 @@ func multiplyMatrices(a, b [][]float64) [][]float64 {
 	return result
 }
 
+func simulateHighCPU(ctx context.Context) {
+	matrixSize := 100
+	a := calculateMatrix(matrixSize)
+	b := calculateMatrix(matrixSize)
+	_ = multiplyMatrices(a, b)
+}
+
 func main() {
+	// 启动触发服务，用于调用main服务
+	go StartServer()
+
 	runtime.GOMAXPROCS(1)
 	runtime.SetMutexProfileFraction(1)
 	runtime.SetBlockProfileRate(1)
 
-	// 创建用于停止程序的channel
 	stopChan := make(chan struct{})
 
-	// 使用绝对路径
 	profilePath := "../profiling-data/cpu.prof"
 	absPath, err := filepath.Abs(profilePath)
 	if err != nil {
@@ -68,51 +77,43 @@ func main() {
 	log.Println("CPU profiling 已启动")
 	defer pprof.StopCPUProfile()
 
-	// 创建channel和互斥锁
 	ch := make(chan []float64, 5)
 	var mu sync.Mutex
 	var sharedSlice []float64
 
-	// 启动HTTP服务器
 	go func() {
-		// 添加停止程序的端点
 		http.HandleFunc("/stop", func(writer http.ResponseWriter, request *http.Request) {
 			writer.Write([]byte("Stopping the program..."))
-			// 确保在程序停止前停止CPU分析
 			log.Println("停止 CPU profiling...")
 			pprof.StopCPUProfile()
 			log.Println("CPU profiling 已停止")
 			close(stopChan)
 		})
 
-		http.HandleFunc("/hello", func(writer http.ResponseWriter, request *http.Request) {
-			writer.Write([]byte("Hello World"))
+		http.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+			// 模拟高CPU操作
+			simulateHighCPU(r.Context())
+			w.Write([]byte("Hello World"))
 		})
 
-		httperr := http.ListenAndServe(":8000", nil)
-		if httperr != nil && httperr != http.ErrServerClosed {
-			log.Fatal("HTTP server error: ", httperr)
-		}
+		log.Println("主服务启动于 :8000")
+		http.ListenAndServe(":8000", nil)
 	}()
 
-	// 启动生产者goroutine，进行CPU密集型计算
 	go func() {
 		for {
 			select {
 			case <-stopChan:
 				return
-			default: // cpu profiling
-				// 创建并计算大型矩阵
+			default:
 				matrixSize := 200
 				matrix1 := calculateMatrix(matrixSize)
 				matrix2 := calculateMatrix(matrixSize)
 				result := multiplyMatrices(matrix1, matrix2)
 
-				// 将结果转换为一维数组并发送到channel
 				data := make([]float64, 0, matrixSize*matrixSize)
 				for i := range result {
 					for j := range result[i] {
-						// 增加每个元素的计算复杂度
 						val := result[i][j]
 						for k := 0; k < 100; k++ {
 							val = math.Pow(math.Sin(val), 2) + math.Cos(val)
@@ -120,6 +121,7 @@ func main() {
 						data = append(data, val)
 					}
 				}
+
 				select {
 				case ch <- data:
 				case <-stopChan:
@@ -129,7 +131,6 @@ func main() {
 		}
 	}()
 
-	// 启动多个消费者goroutine，进行数学计算和内存操作
 	for i := 0; i < 5; i++ {
 		go func() {
 			for {
@@ -137,45 +138,37 @@ func main() {
 				case <-stopChan:
 					return
 				case data := <-ch:
-					// 进行额外的CPU密集型计算
 					for i := range data {
-						// 增加计算复杂度
 						for j := 0; j < 50; j++ {
 							data[i] = math.Pow(data[i], 2)*math.Sin(data[i]) + math.Sqrt(math.Abs(data[i]))
 						}
 					}
 
-					// 锁竞争区域
 					mu.Lock()
 					defer mu.Unlock()
 					sharedSlice = append(sharedSlice, data...)
 					if len(sharedSlice) > 1000000 {
-						// 对切片进行排序，增加CPU消耗
-						sort.Float64s(sharedSlice) //cpu profiling
+						sort.Float64s(sharedSlice)
 						sharedSlice = sharedSlice[:1000]
 					}
 				}
 			}
 		}()
-	}
 
-	// 主goroutine也参与计算
-	for {
-		select {
-		case <-stopChan:
-			return
-		default:
-			// 进行CPU密集型计算
-			size := 150
-			m1 := calculateMatrix(size)
-			m2 := calculateMatrix(size)
-			result := multiplyMatrices(m1, m2)
-
-			// 对结果进行额外计算
-			for i := range result {
-				for j := range result[i] {
-					for k := 0; k < 100; k++ {
-						result[i][j] = math.Pow(math.Tan(result[i][j]), 2) + math.Log(math.Abs(result[i][j])+1)
+		for {
+			select {
+			case <-stopChan:
+				return
+			default:
+				size := 150
+				m1 := calculateMatrix(size)
+				m2 := calculateMatrix(size)
+				result := multiplyMatrices(m1, m2)
+				for i := range result {
+					for j := range result[i] {
+						for k := 0; k < 100; k++ {
+							result[i][j] = math.Pow(math.Tan(result[i][j]), 2) + math.Log(math.Abs(result[i][j])+1)
+						}
 					}
 				}
 			}
