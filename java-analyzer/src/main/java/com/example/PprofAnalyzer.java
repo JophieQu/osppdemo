@@ -112,12 +112,12 @@ public class PprofAnalyzer {
 
             System.out.println(String.format("\nShowing nodes accounting for %.2fs, %.2f%% of %.2fs total", 
                 totalTime / 1e9, 100.0, totalTime / 1e9));
-            System.out.println("Showing top 5 nodes");
+            System.out.println("Showing top 10 nodes");
             System.out.println(String.format("%-10s %-8s %-8s %-10s %-8s %s", 
                 "flat", "flat%", "sum%", "cum", "cum%", "name"));
 
             double sumPercent = 0;
-            for (int i = 0; i < Math.min(5, sortedFunctions.size()); i++) {
+            for (int i = 0; i < Math.min(10, sortedFunctions.size()); i++) {
                 Map.Entry<Function, Long> entry = sortedFunctions.get(i);
                 Function function = entry.getKey();
                 long cumTime = entry.getValue();
