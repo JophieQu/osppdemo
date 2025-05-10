@@ -102,7 +102,7 @@ public class FlameGraphGenerator {
         // 生成SVG
         try (FileWriter writer = new FileWriter(outputPath)) {
             int width = 1200;  // 宽度设为1200px
-            int frameHeight = 30;  // 框架高度设为30px
+            int frameHeight = 30;  // 火焰图高度设为30px
             int height = (maxDepth + 1) * frameHeight;
             int xpad = 10;
             int titleHeight = 100;
@@ -168,7 +168,7 @@ public class FlameGraphGenerator {
                 }
             }
             
-            // 前5个最热点的函数
+            // 前5个最hot的函数
             List<Map.Entry<String, Long>> hotList = new ArrayList<>(hotFunctions.entrySet());
             hotList.sort((a, b) -> b.getValue().compareTo(a.getValue()));
             StringBuilder hotSpots = new StringBuilder("热点函数: ");

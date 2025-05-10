@@ -125,10 +125,18 @@ public class CallGraphGenerator {
             totalTime = 1; // 防止除以零
         }
         
-        // 根据pprof输出调整计算方式
-        double secondsPerSample = 5807.90 / totalSamples;
+        // 使用profile的period信息计算时间（与火焰图保持一致）
+        long period = profile.getPeriod();
+        String unit = stringTable.get((int)profile.getPeriodType().getUnit());
+        double totalTimeNanos = unit.equals("nanoseconds") ? 
+            totalSamples * period : totalSamples * period * 1000;
+        double totalTimeSec = totalTimeNanos / 1_000_000_000.0;  // 转换为秒
+        double secondsPerSample = totalTimeSec / totalSamples;
+        
         logger.fine("总样本数: " + totalSamples);
-        logger.fine("计算得到的总时间: " + (totalSamples * secondsPerSample) + " 秒");
+        logger.fine("周期值(period): " + period);
+        logger.fine("周期单位(unit): " + unit);
+        logger.fine("计算得到的总时间: " + totalTimeSec + " 秒");
         logger.fine("每个样本的时间值: " + secondsPerSample + " 秒");
         
         // 过滤掉累积时间小于1秒的函数
@@ -177,9 +185,16 @@ public class CallGraphGenerator {
                 totalTime = 1; // 防止除以零
             }
 
+            // 计算总时间（秒）
+            long period = profile.getPeriod();
+            String unit = stringTable.get((int)profile.getPeriodType().getUnit());
+            double totalTimeNanos = unit.equals("nanoseconds") ? 
+                totalTime * period : totalTime * period * 1000;
+            double totalTimeSec = totalTimeNanos / 1_000_000_000.0;  // 转换为秒
+            
             // 过滤掉累积时间小于1秒的函数
             double thresholdInSeconds = 1.0; // 过滤阈值为1秒
-            long thresholdInSamples = (long)(thresholdInSeconds / secondsPerSample);
+            long thresholdInSamples = (long)(thresholdInSeconds / (totalTimeSec / totalTime));
             final long finalTotalTime = totalTime; // 创建一个 final 变量供所有 lambda 使用
             
             logger.fine("SVG生成 - 过滤阈值: " + thresholdInSamples + " 样本数 (" + thresholdInSeconds + "秒)");
@@ -225,7 +240,7 @@ public class CallGraphGenerator {
             writer.write("<defs>\n");
             writer.write("  <marker id=\"arrowhead\" viewBox=\"0 -5 10 10\" refX=\"2\" refY=\"0\" \n");
             writer.write("          markerWidth=\"6\" markerHeight=\"6\" orient=\"auto\">\n");
-            writer.write("    <path d=\"M10,-5L0,0L10,5\" fill=\"#d32f2f\"/>\n");
+            writer.write("    <path d=\"M0,-5L10,0L0,5\" fill=\"#d32f2f\"/>\n");
             writer.write("  </marker>\n");
             writer.write("</defs>\n");
 
@@ -233,7 +248,7 @@ public class CallGraphGenerator {
             writer.write(String.format("<text x=\"%d\" y=\"%d\" font-family=\"Arial\" font-size=\"18\" font-weight=\"bold\">函数调用图</text>\n", 
                 padding, padding - 10));
             writer.write(String.format("<text x=\"%d\" y=\"%d\" font-family=\"Arial\" font-size=\"12\">总时间: %.2f秒</text>\n", 
-                padding, padding + 10, totalTime * secondsPerSample));
+                padding, padding + 10, totalTimeSec));
 
             // 计算节点位置
             Map<String, NodeInfo> nodeInfos = calculateHierarchicalLayout(filteredGraph, width, height, padding);
@@ -260,7 +275,9 @@ public class CallGraphGenerator {
                         double labelX = (startX + endX) / 2;
                         double labelY = (startY + endY) / 2 - 10;
                         long callerTime = functionCumTime.getOrDefault(caller, 0L);
-                        double callerSecs = callerTime * secondsPerSample;
+                        double callerTimeNanos = unit.equals("nanoseconds") ? 
+                            callerTime * period : callerTime * period * 1000;
+                        double callerSecs = callerTimeNanos / 1_000_000_000.0;
                         double callerPercent = 100.0 * callerTime / finalTotalTime;
                         writer.write(String.format("<text class=\"edge-label\" x=\"%.1f\" y=\"%.1f\">%.2fs (%.2f%%)</text>\n",
                             labelX, labelY, callerSecs, callerPercent));
@@ -280,8 +297,13 @@ public class CallGraphGenerator {
                 double selfPercent = 100.0 * selfTime / finalTotalTime;
                 
                 // 转换为秒
-                double selfSecs = selfTime * secondsPerSample;
-                double cumSecs = cumTime * secondsPerSample;
+                double selfTimeNanos = unit.equals("nanoseconds") ? 
+                    selfTime * period : selfTime * period * 1000;
+                double selfSecs = selfTimeNanos / 1_000_000_000.0;
+                
+                double cumTimeNanos = unit.equals("nanoseconds") ? 
+                    cumTime * period : cumTime * period * 1000;
+                double cumSecs = cumTimeNanos / 1_000_000_000.0;
 
                 // 确定节点是否为热点
                 String nodeClass = cumPercent > 10 ? "node hot" : "node";

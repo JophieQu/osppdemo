@@ -21,7 +21,7 @@ public class PprofAnalyzer {
     private static final Logger logger = Logger.getLogger(PprofAnalyzer.class.getName());
 
     public static void main(String[] args) {
-        String profilePath = "../profiling-data/cpu.prof"; // 使用相对路径指向分析文件
+        String profilePath = "../profiling-data/cpu.prof";
 
         try (InputStream fileInputStream = new FileInputStream(profilePath);
              InputStream gzipInputStream = new GZIPInputStream(fileInputStream)) {
@@ -32,13 +32,13 @@ public class PprofAnalyzer {
             // 获取字符串表
             List<String> stringTable = profile.getStringTableList();
 
-            // 显示一些基本信息
-            System.out.println("样本数量: " + profile.getSampleCount());
-            System.out.println("函数数量: " + profile.getFunctionCount());
-            System.out.println("位置数量: " + profile.getLocationCount());
-            System.out.println("------");
+            // // 显示一些基本信息
+            // System.out.println("样本数量: " + profile.getSampleCount());
+            // System.out.println("函数数量: " + profile.getFunctionCount());
+            // System.out.println("位置数量: " + profile.getLocationCount());
+            // System.out.println("------");
 
-            // 先生成火焰图
+            // 生成火焰图
             String flameGraphPath = "../profiling-data/flamegraph.svg";
             FlameGraphGenerator flameGraphGenerator = new FlameGraphGenerator(profile, flameGraphPath);
             flameGraphGenerator.generateFlameGraph();
@@ -53,7 +53,10 @@ public class PprofAnalyzer {
             // 从CallGraphGenerator获取性能数据
             Map<String, Long> functionSelfTime = callGraphGenerator.getFunctionSelfTime(); 
             Map<String, Long> functionCumTime = callGraphGenerator.getFunctionCumTime();
-            double secondsPerSample = callGraphGenerator.getSecondsPerSample();
+            
+            // 计算时间信息
+            long period = profile.getPeriod();
+            String unit = stringTable.get((int)profile.getPeriodType().getUnit());
             
             // 获取函数对象映射
             Map<String, Function> functionMap = new HashMap<>();
@@ -71,10 +74,12 @@ public class PprofAnalyzer {
             long totalSamples = sortedFunctions.stream()
                 .mapToLong(Map.Entry::getValue)
                 .sum();
-            double totalTime = totalSamples * secondsPerSample;
+            double totalTimeNanos = unit.equals("nanoseconds") ? 
+                totalSamples * period : totalSamples * period * 1000;
+            double totalTimeSec = totalTimeNanos / 1_000_000_000.0;  // 转换为秒
             
             System.out.println(String.format("\nShowing nodes accounting for %.2fs, %.2f%% of %.2fs total", 
-                totalTime, 100.0, totalTime));
+                totalTimeSec, 100.0, totalTimeSec));
             System.out.println("Showing top 10 nodes");
             System.out.println(String.format("%-10s %-8s %-8s %-10s %-8s %s", 
                 "flat", "flat%", "sum%", "cum", "cum%", "name"));
@@ -89,8 +94,13 @@ public class PprofAnalyzer {
                 long selfSamples = functionSelfTime.getOrDefault(functionName, 0L);
                 
                 // 计算时间和百分比
-                double cumTime = cumSamples * secondsPerSample;
-                double selfTime = selfSamples * secondsPerSample;
+                double cumTimeNanos = unit.equals("nanoseconds") ? 
+                    cumSamples * period : cumSamples * period * 1000;
+                double cumTime = cumTimeNanos / 1_000_000_000.0;
+                
+                double selfTimeNanos = unit.equals("nanoseconds") ? 
+                    selfSamples * period : selfSamples * period * 1000;
+                double selfTime = selfTimeNanos / 1_000_000_000.0;
                 
                 double cumPercent = 100.0 * cumSamples / totalSamples;
                 double selfPercent = 100.0 * selfSamples / totalSamples;

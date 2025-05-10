@@ -16,6 +16,7 @@ com/google/perftools/profiles/ProfileProto$LabelOrBuilder.class
 com/google/perftools/profiles/ProfileProto$Function.class
 com/example/CallGraphGenerator$NodeInfo.class
 com/google/perftools/profiles/ProfileProto$Profile$1.class
+com/example/FlameGraphGenerator$FlameNode.class
 com/example/PprofAnalyzer.class
 com/google/perftools/profiles/ProfileProto$LocationOrBuilder.class
 com/google/perftools/profiles/ProfileProto$Location.class
