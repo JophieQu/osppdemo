@@ -11,7 +11,7 @@ import (
 
 func StartServer() {
 	http.HandleFunc("/trigger", func(w http.ResponseWriter, r *http.Request) {
-		// 调用main.go的服务
+
 		resp, err := http.Get("http://localhost:8000/hello")
 		if err != nil {
 			http.Error(w, "调用 main.go 失败", http.StatusInternalServerError)

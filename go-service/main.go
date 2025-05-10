@@ -49,7 +49,7 @@ func simulateHighCPU(ctx context.Context) {
 }
 
 func main() {
-	// 启动触发服务，用于调用main服务
+
 	go StartServer()
 
 	runtime.GOMAXPROCS(1)
