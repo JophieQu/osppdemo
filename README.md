@@ -1,5 +1,3 @@
-# ospp预选任务
-
 ## 项目结构
 
 ```
@@ -13,7 +11,6 @@ demo-root/
 │   │       ├── PprofAnalyzer.java        # 主解析程序
 │   │       ├── FlameGraphGenerator.java   # 火焰图生成器
 │   │       └── CallGraphGenerator.java    # 调用图生成器
-│   │
 │   └── main/proto/     # proto 文件目录
 │   │   └── profile.proto   # 解析 pprof 所需的 proto 文件
 │   └── pom.xml         # Maven配置文件
@@ -67,7 +64,7 @@ go-service 的 http 程序主要通过以下几个地方模拟了高 CPU 场景�
    该路由的 handler 中调用了 `simulateHighCPU` 函数。该函数会生成两个 100x100 的矩阵，并进行矩阵乘法运算 `multiplyMatrices` ，这是一个计算密集型操作，会显著占用 CPU 资源。
 
 2. 后台 goroutine（在 `main.go` 中）  
-   在主函数中，除了 http 服务外，还启动了多个 goroutine，这些 goroutine 会不断地进行如下高 CPU 运算：
+   在主函数中，除了 http 服务外，还启动了多个 goroutine，这些 goroutine 会不断地进行如下运算：
    - 生成大矩阵（如 200x200、150x150），并进行多次矩阵乘法。
    - 对矩阵结果中的每个元素进行大量的数学函数计算（如 `math.Pow`、`math.Sin`、`math.Sqrt`、`math.Tan`、`math.Log` 等），并多次循环嵌套，进一步增加 CPU 占用。
    - 还有一部分代码会不断地生成、处理和排序大量的浮点数切片（slice），并对其进行复杂的数学运算。
