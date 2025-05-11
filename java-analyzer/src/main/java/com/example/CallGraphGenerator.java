@@ -49,15 +49,12 @@ public class CallGraphGenerator {
     private Map<String, Set<String>> buildCallGraph() {
         List<Sample> samples = profile.getSampleList();
         
-        // 尝试三种不同的方法来计算自身时间
-        Map<String, Long> selfTimes1 = new HashMap<>();    // 方法1：叶子节点获得全部时间
-        Map<String, Long> selfTimes2 = new HashMap<>();    // 方法2：每个函数获得样本的权重
-        Map<String, Long> selfTimes3 = new HashMap<>();    // 方法3：只有调用栈顶部函数获得自身时间
-        
-        Map<String, Long> cumulativeTimes = new HashMap<>();  // 累积时间（样本数）
+        // 定义自身时间和累积时间的Map
+        Map<String, Long> selfTimes = new HashMap<>();    // 只有调用栈顶部函数获得自身时间
+        Map<String, Long> cumulativeTimes = new HashMap<>();  // 每个函数获得样本的完整权重
         Map<String, Set<String>> callGraph = new HashMap<>();
         
-        // 计算总样本数和时间
+        // 计算总样本数
         long totalSamples = 0;
         for (Sample sample : samples) {
             if (sample.getValueCount() > 0) {
@@ -65,10 +62,10 @@ public class CallGraphGenerator {
             }
         }
         
-        // 首先计算每个样本中函数的自身时间和累积时间
+        // 计算每个样本中函数的自身时间和累积时间
         for (Sample sample : samples) {
             if (sample.getLocationIdCount() > 0 && sample.getValueCount() > 0) {
-                // 获取样本值 - 在pprof中，第一个值通常是样本数量，第二个值可能是累积时间
+                // 获取样本值 - 在pprof中，第一个值通常是样本数量
                 long sampleValue = sample.getValueList().get(0); // 样本数量/权重
                 
                 // 构建调用栈
@@ -83,21 +80,14 @@ public class CallGraphGenerator {
                     }
                 }
                 
-                // 方法3：只有调用栈顶部的函数（索引0）获得自身时间
+                // 计算自身时间：只有调用栈顶部的函数（索引0）获得自身时间
                 if (!callStack.isEmpty()) {
                     String topFunction = callStack.get(0);
-                    selfTimes3.merge(topFunction, sampleValue, Long::sum);
+                    selfTimes.merge(topFunction, sampleValue, Long::sum);
                 }
                 
-                // 方法1：最后一个函数（叶子节点）获得全部自身时间
-                if (!callStack.isEmpty()) {
-                    String leafFunction = callStack.get(callStack.size() - 1);
-                    selfTimes1.merge(leafFunction, sampleValue, Long::sum);
-                }
-                
-                // 方法2：每个函数获得样本的权重(累积时间)
+                // 计算累积时间：每个函数获得样本的完整权重
                 for (String functionName : callStack) {
-                    selfTimes2.merge(functionName, sampleValue, Long::sum);
                     cumulativeTimes.merge(functionName, sampleValue, Long::sum);
                 }
 
@@ -159,8 +149,7 @@ public class CallGraphGenerator {
         });
 
         // 存储时间信息到类成员变量
-        // 自身时间使用方法3（顶部函数），累积时间使用方法2（全部样本）
-        this.functionSelfTime = selfTimes3;
+        this.functionSelfTime = selfTimes;
         this.functionCumTime = cumulativeTimes;
         this.secondsPerSample = finalSecondsPerSample;
 
@@ -171,7 +160,7 @@ public class CallGraphGenerator {
             Map<String, Long> functionSelfTime) throws IOException {
         try (FileWriter writer = new FileWriter(outputPath)) {
             int width = 3000;
-            int height = 1800;
+            int height = 1500;
             int padding = 40;
             
             // 计算总时间（使用最大的累积时间作为总时间）

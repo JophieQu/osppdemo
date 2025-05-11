@@ -45,7 +45,6 @@ public class FlameGraphGenerator {
             List<String> callStack = new ArrayList<>();
 
             // 从叶子节点（调用栈底部）到根节点（调用栈顶部）构建调用栈
-            // 在pprof中，LocationId列表的顺序是从叶子节点到根节点
             for (int i = 0; i < sample.getLocationIdCount(); i++) {
                 Location location = profile.getLocation((int)sample.getLocationId(i) - 1);
                 if (location.getLineCount() > 0) {
@@ -56,7 +55,7 @@ public class FlameGraphGenerator {
                 }
             }
 
-            // 构建折叠格式的堆栈字符串，注意：火焰图是自下而上展示的，所以顺序要反过来
+            // 构建折叠格式的堆栈字符串
             StringBuilder stackBuilder = new StringBuilder();
             for (int i = callStack.size() - 1; i >= 0; i--) {
                 if (i < callStack.size() - 1) {

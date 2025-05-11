@@ -32,17 +32,11 @@ public class PprofAnalyzer {
             // 获取字符串表
             List<String> stringTable = profile.getStringTableList();
 
-            // // 显示一些基本信息
-            // System.out.println("样本数量: " + profile.getSampleCount());
-            // System.out.println("函数数量: " + profile.getFunctionCount());
-            // System.out.println("位置数量: " + profile.getLocationCount());
-            // System.out.println("------");
-
             // 生成火焰图
             String flameGraphPath = "../profiling-data/flamegraph.svg";
             FlameGraphGenerator flameGraphGenerator = new FlameGraphGenerator(profile, flameGraphPath);
             flameGraphGenerator.generateFlameGraph();
-            logger.info("\n火焰图已生成到: " + flameGraphPath);
+            logger.info("火焰图已生成到: " + flameGraphPath);
 
             // 生成调用图
             String callGraphPath = "../profiling-data/callgraph.svg";
@@ -111,8 +105,10 @@ public class PprofAnalyzer {
                     selfTime, selfPercent, sumPercent, cumTime, cumPercent, functionName));
             }
         } catch (Exception e) {
-            System.err.println("解析 profiling 文件时出错: " + e.getMessage());
-            e.printStackTrace();
+            logger.severe("解析 profiling 文件时出错: " + e.getMessage());
+            java.io.StringWriter sw = new java.io.StringWriter();
+            e.printStackTrace(new java.io.PrintWriter(sw));
+            logger.severe(sw.toString());
         }
     }
 }
