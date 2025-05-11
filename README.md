@@ -34,11 +34,10 @@ demo-root/
 ### 生成性能分析数据
 
 1. 启动Go程序，并挂载skywalking-go
-   ```
+```
    > cd go-service
    > go build -toolexec="/Users/jingyiqu/ospp/demo/apache-skywalking-go-0.6.0-bin/bin/skywalking-go-agent-0.6.0-darwin-amd64" -a -o test .
    > ./test
-
    ```
 
 2. 程序将自动生成CPU性能分析数据并保存到`profiling-data/cpu.prof`
@@ -49,7 +48,6 @@ demo-root/
    ```
    > cd java-analyzer
    > mvn clean compile exec:java
-   
    ```
 
 3. 程序会解析`cpu.prof`文件，并生成以下可视化文件，保存到`profiling-data`目录下：
