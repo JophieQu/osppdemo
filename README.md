@@ -13,6 +13,9 @@ demo-root/
 │   │       ├── PprofAnalyzer.java        # 主解析程序
 │   │       ├── FlameGraphGenerator.java   # 火焰图生成器
 │   │       └── CallGraphGenerator.java    # 调用图生成器
+│   │
+│   └── main/proto/     # proto 文件目录
+│   │   └── profile.proto   # 解析 pprof 所需的 proto 文件
 │   └── pom.xml         # Maven配置文件
 ├── profiling-data/     # 存储性能分析结果
 │   ├── cpu.prof        # CPU性能分析数据
@@ -34,7 +37,7 @@ demo-root/
 ### 生成性能分析数据
 
 1. 启动Go程序，并挂载skywalking-go
-```
+   ```
    > cd go-service
    > go build -toolexec="/Users/jingyiqu/ospp/demo/apache-skywalking-go-0.6.0-bin/bin/skywalking-go-agent-0.6.0-darwin-amd64" -a -o test .
    > ./test
